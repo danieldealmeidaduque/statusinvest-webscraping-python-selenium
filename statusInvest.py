@@ -6,6 +6,7 @@ from selenium import webdriver
 cabecalho = True
 umaVez = True
 
+
 def pega_dados_acao(cod_acao, driver):
     dict_acao = {}
     dict_aux = {}
@@ -48,6 +49,7 @@ def pega_dados_acao(cod_acao, driver):
             "/html/body/main/div[2]/div/div[4]/div/div/div[3]/div/div/div/strong").text
         dict_aux["PARTICIPACAO NO IBOV"] = driver.find_element_by_xpath(
             "/html/body/main/div[2]/div/div[4]/div/div/div[4]/div/a/div/div/strong").text + "%"
+
     except:
         print("Erro ao pegar tipo, tag along.. ")
         return None
@@ -91,36 +93,28 @@ def pega_dados_acao(cod_acao, driver):
     except:
         print("Erro ao pegar os indices de crescimento")
         return None
-    
+
     try:
-        atuacao = driver.find_element_by_xpath("/html/body/main/div[5]/div/div[3]/div").text
-        atuacao = atuacao.replace("arrow_forward", "").replace("\n\n","\n")
-        atuacao = atuacao.split("\n")
-        atuacao.pop()
-        for i in range(len(atuacao)):
-            if i % 2 == 0:
-                dict_atuacao[atuacao[i]] = atuacao[i + 1]
+        atuacao = driver.find_element_by_xpath(
+            "/html/body/main/div[5]/div/div[3]/div").text
+        atuacao = "ATUACAO\n" + atuacao
+        dict_balanco = limpa_dados(atuacao)
     except:
         print("Erro ao pegar setor, subsetor e segmento")
         return None
 
     try:
-        balanco = driver.find_element_by_xpath("/html/body/main/div[5]/div/div[2]").text
-        balanco = balanco.replace("format_quote\n", "").replace("help_outline\n","")
-        balanco = balanco.split("\n")
-        balanco.pop()
-        if len(balanco) == 21:
-            balanco.insert(19,'-') 
-        for i in range(len(balanco)):
-            if i % 2 == 0:
-                dict_balanco[balanco[i]] = balanco[i + 1]
+        balanco = driver.find_element_by_xpath(
+            "/html/body/main/div[5]/div/div[2]").text
+        balanco = "BALANCO\n" + balanco
+        dict_balanco = limpa_dados(balanco)
     except:
         print("Erro ao pegar o balanco patrimonial")
         return None
-    
-    dict_acao.update({"INDICADORES AUXILIARES" : dict_aux})
-    dict_acao.update({"ATUACAO" : dict_atuacao})
-    dict_acao.update({"BALANCO" : dict_balanco})
+
+    dict_acao.update({"INDICADORES AUXILIARES": dict_aux})
+    dict_acao.update(dict_atuacao)
+    dict_acao.update(dict_balanco)
     dict_acao.update(ind_valuation)
     dict_acao.update(ind_endividamento)
     dict_acao.update(ind_eficiencia)
@@ -129,6 +123,7 @@ def pega_dados_acao(cod_acao, driver):
 
     return dict_acao
 
+
 def iniciaDriver():
     driver = webdriver.Chrome(
         executable_path='ChromeDriver/chromedriver.exe')
@@ -136,27 +131,28 @@ def iniciaDriver():
 
 
 def limpa_dados(dados):
+    dict_valores = {}
+    dict_dados = {}
+
     # tira lixo
     dados = dados.replace("format_quote\n", "").replace(
-        "show_chart\nhelp_outline\n", "").replace("show_chart\nhelp_outline", "")
+        "show_chart\nhelp_outline\n", "").replace("show_chart\nhelp_outline", "").replace("help_outline\n", "").replace("arrow_forward", "").replace("\n\n", "\n")
 
     # transforma o texto em lista
     lista_dados = dados.split("\n")
     lista_dados.pop()
+    chavePrincipal = lista_dados.pop(0)
+
+    # caso segmento de listagem esteja vazio, coloca o traço
+    if len(lista_dados) == 21:
+        lista_dados.insert(19, '-')
 
     # transforma a lista em dicionario
-    chavePrincipal = lista_dados.pop(0)
-    listaChaves = []
-    listaValores = []
     for i in range(len(lista_dados)):
         if i % 2 == 0:
-            listaChaves.append(lista_dados[i])
-        else:
-            listaValores.append(lista_dados[i])
+            dict_valores[lista_dados[i]] = lista_dados[i + 1]
 
-    dict_dados = {}
-    dict_dados[chavePrincipal] = dict(
-        zip(iter(listaChaves), iter(listaValores)))
+    dict_dados[chavePrincipal] = dict_valores
 
     return dict_dados
 
@@ -171,11 +167,11 @@ def escreve_dict_no_arq(dadosAcoes, arq):
         for chaveAcao in dadosAcoes:
             if umaVez:
                 umaVez = False
-                for chaveIndicador in dadosAcoes[chaveAcao]:                
+                for chaveIndicador in dadosAcoes[chaveAcao]:
                     for chaveValores in (dadosAcoes[chaveAcao])[chaveIndicador]:
                         arq.write(chaveValores + ";")
         arq.write("\n")
-          
+
     # Escreve todos dados da acao no arquivo, inclusive seu codigo
     for chaveAcao in dadosAcoes:
         arq.write(chaveAcao + ";")
@@ -184,6 +180,7 @@ def escreve_dict_no_arq(dadosAcoes, arq):
                 valor = ((dadosAcoes[chaveAcao])[chaveIndicador])[chaveValores]
                 arq.write(valor + ";")
         arq.write("\n")
+
 
 if __name__ == "__main__":
     # Dicionário principal
@@ -200,7 +197,7 @@ if __name__ == "__main__":
     dateFormated = data_dia.strftime('%d_%m_%Y')
 
     # Abre os arquivos
-    arqEntrada = open("my_codes.txt", "r")
+    arqEntrada = open("codes.txt", "r")
     arqSaida = open("indicadores_StatusInvest_" + dateFormated + ".csv", "w")
 
     # Le o arquivo dos codigos das ações e coloca em uma lista
@@ -213,7 +210,7 @@ if __name__ == "__main__":
         if auxiliar != None:
             dict_acoes[acao] = auxiliar
 
-    # Escreve os dados de todas acoes no arquivo de saida .csv    
+    # Escreve os dados de todas acoes no arquivo de saida .csv
     escreve_dict_no_arq(dict_acoes, arqSaida)
 
     # Fecha os arquivos e o driver
