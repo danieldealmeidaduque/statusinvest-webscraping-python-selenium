@@ -9,6 +9,6 @@ Quais ações vou pegar no webscrapping?
  - Caso queira restringir a quantidade de ações, é só modificar esse arquivo para as ações que você quiser
 
 Como executar?
-- Verificar se a versão do chrome driver está atualizada
+- Verificar se a versão do chrome driver é compatível com a versão do seu chrome
 - Abrir o arquivo em uma framework
 - Executar o arquivo 'statusInvest.py'
