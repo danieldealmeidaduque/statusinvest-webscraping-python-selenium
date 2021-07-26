@@ -3,9 +3,10 @@
  
 -- Versão 1: 26/07/2021
 
-- O arquivo 'codes.txt' tem o código de todas ações do ibov separados por quebra de linha
- - Esse arquivo é usado como padrão na execução do código;
- - Caso queira restringir a quantidade de ações, é só modificar para as ações que você quiser
+Quais ações vou pegar no webscrapping?
+ - O arquivo 'codes.txt' tem o código de todas ações do ibov separados por quebra de linha
+ - Esse arquivo é usado como padrão na execução do código
+ - Caso queira restringir a quantidade de ações, é só modificar esse arquivo para as ações que você quiser
 
 Como executar?
 - Verificar se a versão do chrome driver está atualizada
