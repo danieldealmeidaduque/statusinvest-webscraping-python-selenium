@@ -8,5 +8,5 @@ Aplicação para pegar as informações das ações no site "Status Invest"
 
 ## Versão 1 - 26/07/2021
 
-## Observação
-A versão 2 pode ser considerado meu outro repositório "ufes-final-project-data-science-python"
+## Versão 2
+Pode ser considerado meu outro repositório "ufes-final-project-data-science-python"
