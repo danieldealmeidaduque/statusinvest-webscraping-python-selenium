@@ -1,224 +1,110 @@
+import re
 import time
-import datetime
+import numpy as np
+import pandas as pd
+from unidecode import unidecode
+from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 
-# Toggle para executar so uma vez o cabecalho do arquivo de saida
-cabecalho = True
-umaVez = True
+# define selenium webdriver options
+options = webdriver.ChromeOptions()
 
-
-def pega_dados_acao(cod_acao, driver):
-    dict_acao = {}
-    dict_aux = {}
-    dict_atuacao = {}
-    dict_balanco = {}
-
-    print(" --   " + cod_acao + "   -- ")
-    try:
-        driver.get("https://statusinvest.com.br/acoes/" + cod_acao)
-    except:
-        print("Erro ao acessar o site")
-        return None
-
-    try:
-        dict_aux["VALOR ATUAL"] = "R$ " + driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[1]/div/div[1]/div/div[1]/strong").text
-        dict_aux["MIN. 52 SEMANAS"] = "R$ " + driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[1]/div/div[2]/div/div[1]/strong").text
-        dict_aux["MAX. 52 SEMANAS"] = "R$ " + driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[1]/div/div[3]/div/div[1]/strong").text
-        dict_aux["VALORIZACAO(12M)"] = driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[1]/div/div[5]/div/div[1]/strong").text
-    except:
-        print("Erro ao pegar a cotacao, valorizacao.. ")
-        return None
-
-    try:
-        tituloTipo = driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[4]/div/div/div[1]/div/div/h3").text
-
-        if tituloTipo == "TIPO":
-            dict_aux["TIPO"] = driver.find_element_by_xpath(
-                "/html/body/main/div[2]/div/div[4]/div/div/div[1]/div/div/strong").text
-        else:
-            dict_aux["TIPO"] = "UNIT"
-
-        dict_aux["TAG ALONG"] = driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[4]/div/div/div[2]/div/div/div/strong").text.replace(" ", "")
-        dict_aux["LIQ. MED. DIARIA"] = "R$ " + driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[4]/div/div/div[3]/div/div/div/strong").text
-        dict_aux["PARTICIPACAO NO IBOV"] = driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[4]/div/div/div[4]/div/a/div/div/strong").text + "%"
-
-    except:
-        print("Erro ao pegar tipo, tag along.. ")
-        return None
-
-    try:
-        ind_valuation = driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[6]/div[2]/div/div[1]").text
-        ind_valuation = limpa_dados(ind_valuation)
-    except:
-        print("Erro ao pegar os indices de valuation")
-        return None
-
-    try:
-        ind_endividamento = driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[6]/div[2]/div/div[2]").text
-        ind_endividamento = limpa_dados(ind_endividamento)
-    except:
-        print("Erro ao pegar os indices de endividamento")
-        return None
-
-    try:
-        ind_eficiencia = driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[6]/div[2]/div/div[3]").text
-        ind_eficiencia = limpa_dados(ind_eficiencia)
-    except:
-        print("Erro ao pegar os indices de eficiencia")
-        return None
-
-    try:
-        ind_rentabilidade = driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[6]/div[2]/div/div[4]").text
-        ind_rentabilidade = limpa_dados(ind_rentabilidade)
-    except:
-        print("Erro ao pegar os indices de rentabilidade")
-        return None
-
-    try:
-        ind_crescimento = driver.find_element_by_xpath(
-            "/html/body/main/div[2]/div/div[6]/div[2]/div/div[5]").text
-        ind_crescimento = limpa_dados(ind_crescimento)
-    except:
-        print("Erro ao pegar os indices de crescimento")
-        return None
-
-    try:
-        atuacao = driver.find_element_by_xpath(
-            "/html/body/main/div[5]/div/div[3]/div").text
-        atuacao = "ATUACAO\n" + atuacao
-        dict_balanco = limpa_dados(atuacao)
-    except:
-        print("Erro ao pegar setor, subsetor e segmento")
-        return None
-
-    try:
-        balanco = driver.find_element_by_xpath(
-            "/html/body/main/div[5]/div/div[2]").text
-        balanco = "BALANCO\n" + balanco
-        dict_balanco = limpa_dados(balanco)
-    except:
-        print("Erro ao pegar o balanco patrimonial")
-        return None
-
-    dict_acao.update({"INDICADORES AUXILIARES": dict_aux})
-    dict_acao.update(dict_atuacao)
-    dict_acao.update(dict_balanco)
-    dict_acao.update(ind_valuation)
-    dict_acao.update(ind_endividamento)
-    dict_acao.update(ind_eficiencia)
-    dict_acao.update(ind_rentabilidade)
-    dict_acao.update(ind_crescimento)
-
-    return dict_acao
+# create selenium webdriver instance
+driver = webdriver.Chrome(options=options)
 
 
-def iniciaDriver():
-    driver = webdriver.Chrome(
-        executable_path='ChromeDriver/chromedriver.exe')
-    return driver
+def get_stock_soup(stock):
+    ''' Get raw html from a stock '''
+
+    # access the stock url
+    driver.get(f'https://statusinvest.com.br/acoes/{stock}')
+
+    # get html from stock
+    html = driver.find_element(By.ID, 'main-2').get_attribute('innerHTML')
+
+    # remove accents from html and transform html into soup
+    soup = BeautifulSoup(unidecode(html), 'html.parser')
+
+    return soup
 
 
-def limpa_dados(dados):
-    dict_valores = {}
-    dict_dados = {}
+def soup_to_dict(soup):
+    '''Get all data from stock soup and return as a dictionary '''
+    keys, values = [], []
 
-    # tira lixo
-    dados = dados.replace("format_quote\n", "").replace(
-        "show_chart\nhelp_outline\n", "").replace("show_chart\nhelp_outline", "").replace("help_outline\n", "").replace("arrow_forward", "").replace("\n\n", "\n")
+    # get divs from stock
+    soup1 = soup.find('div', class_='pb-3 pb-md-5')
+    soup2 = soup.find('div', class_='card rounded text-main-green-dark')
+    soup3 = soup.find('div', class_='indicator-today-container')
+    soup4 = soup.find(
+        'div', class_='top-info info-3 sm d-flex justify-between mb-3')
+    soups = [soup1, soup2, soup3, soup4]
 
-    # transforma o texto em lista
-    lista_dados = dados.split("\n")
-    lista_dados.pop()
-    chavePrincipal = lista_dados.pop(0)
+    for s in soups:
+        # get only titles from a div and append to keys
+        titles = s.find_all('h3', re.compile('title m-0[^"]*'))
+        titles = [t.get_text() for t in titles]
+        keys += titles
 
-    # caso segmento de listagem esteja vazio, coloca o traço
-    if len(lista_dados) == 21:
-        lista_dados.insert(19, '-')
+        # get only numbers from a div and append to values
+        numbers = s.find_all('strong', re.compile('value[^"]*'))
+        numbers = [n.get_text()for n in numbers]
+        values += numbers
 
-    # transforma a lista em dicionario
-    for i in range(len(lista_dados)):
-        if i % 2 == 0:
-            dict_valores[lista_dados[i]] = lista_dados[i + 1]
+    # remove unused key and insert needed keys
+    keys.remove('PART. IBOV')
+    keys.insert(6, 'TAG ALONG')
+    keys.insert(7, 'LIQUIDEZ MEDIA DIARIA')
 
-    dict_dados[chavePrincipal] = dict_valores
+    # clean keys list
+    keys = [k.replace('\nhelp_outline', '').strip() for k in keys]
+    keys = [k for k in keys if k != '']
 
-    return dict_dados
+    # clean values list
+    values = [v.replace('\nhelp_outline', '').strip() for v in values]
+    values = [v.replace('.', '').replace(',', '.') for v in values]
 
+    # create a dictionary using keys and values from indicators
+    d = {k: v for k, v in zip(keys, values)}
 
-def escreve_dict_no_arq(dadosAcoes, arq):
-    global cabecalho
-    global umaVez
-    # Escreve o cabecalho com base na primeira acao
-    if cabecalho:
-        cabecalho = False
-        arq.write("COD ACAO;")
-        for chaveAcao in dadosAcoes:
-            if umaVez:
-                umaVez = False
-                for chaveIndicador in dadosAcoes[chaveAcao]:
-                    for chaveValores in (dadosAcoes[chaveAcao])[chaveIndicador]:
-                        arq.write(chaveValores + ";")
-        arq.write("\n")
-
-    # Escreve todos dados da acao no arquivo, inclusive seu codigo
-    for chaveAcao in dadosAcoes:
-        arq.write(chaveAcao + ";")
-        for chaveIndicador in dadosAcoes[chaveAcao]:
-            for chaveValores in (dadosAcoes[chaveAcao])[chaveIndicador]:
-                valor = ((dadosAcoes[chaveAcao])[chaveIndicador])[chaveValores]
-                arq.write(valor + ";")
-        arq.write("\n")
+    return d
 
 
 if __name__ == "__main__":
-    # Dicionário principal
-    dict_acoes = {}
+    dict_stocks = {}
 
-    # Inicia timer pra saber tempo de execucao do programa
+    # start timer
     start = time.time()
 
-    # Executa funcao para iniciar o driver do chrome
-    driver = iniciaDriver()
+    # read file with stocks codes to get stock information
+    with open('stocks.txt', 'r') as f:
+        stocks = f.read().splitlines()
 
-    # Data do dia
-    data_dia = datetime.datetime.today()
-    dateFormated = data_dia.strftime('%d_%m_%Y')
+        # get stock information and create excel sheet
+        for stock in stocks:
+            try:
+                # get data and transform into dictionary
+                soup = get_stock_soup(stock)
+                dict_stock = soup_to_dict(soup)
+                dict_stocks[stock] = dict_stock
+            except:
+                # if we not get the information... just skip it
+                print(f'Could not get {stock} information')
 
-    # Abre os arquivos
-    arqEntrada = open("codes.txt", "r")
-    arqSaida = open("indicadores_StatusInvest_" + dateFormated + ".csv", "w")
+    # create dataframe using dictionary of stocks informations
+    df = pd.DataFrame(dict_stocks)
 
-    # Le o arquivo dos codigos das ações e coloca em uma lista
-    acoes = arqEntrada.read()
-    listaAcoes = list(acoes.split("\n"))
+    # replace missing values with NaN to facilitate processing
+    df = df.replace(['', '-', '--', '-%', '--%'], np.nan)
 
-    # Pega os dados para cada acao da lista de acoes
-    for acao in listaAcoes:
-        auxiliar = pega_dados_acao(acao, driver)
-        if auxiliar != None:
-            dict_acoes[acao] = auxiliar
+    # write dataframe into csv file
+    df.to_excel('stocks_data.xlsx', index_label='indicadores')
 
-    # Escreve os dados de todas acoes no arquivo de saida .csv
-    escreve_dict_no_arq(dict_acoes, arqSaida)
-
-    # Fecha os arquivos e o driver
-    arqEntrada.close()
-    arqSaida.close()
+    # exit the driver
     driver.quit()
 
+    # end timer
     end = time.time()
-    elapsed = end - start
-    print("\n\nStatus Invest executou em " + time.strftime("%H:%M:%S",
-                                                           time.gmtime(elapsed)) + ". Dia: " + dateFormated + "\n\n")
+
+    print(f'Brasilian stocks information got in {int(end-start)} s')
