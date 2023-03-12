@@ -74,9 +74,16 @@
 ## About The Project
 
 <p align="justify">
-    Status Invest is a website with financial data about stocks. They have several different data such as financial fundamental data of the stock at the present moment. I created this webscraping project to get the information about brazilian stocks in this website to agregate the information in a single database and uset it later to facilitate the analysis for choosing the best stocks.
+  I developed a webscraping project to extract financial data from Status Invest, a website that provides information on stocks. This website contains a variety of data, such as the stock's financial fundamentals at the present moment.
 </p>
 
+<p align="justify">
+  My project aims to aggregate financial information from Brazilian stocks available on the Status Invest website into a single database. The goal is to facilitate the analysis of this data and assist in the selection of the best stocks.
+</p>
+
+<p align="justify">
+  By consolidating this information into a single database, I hope to provide a more convenient and efficient way of accessing and analyzing financial data for Brazilian stocks. This will allow for a more streamlined process of selecting the best stocks for investment purposes.
+</p>
 
 <!-- GETTING STARTED -->
 ## Getting Started
