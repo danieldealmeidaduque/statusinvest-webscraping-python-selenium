@@ -73,7 +73,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-Here's a blank template to get started: To avoid retyping too much info.
+<p align="justify">
+    Status Invest is a website with financial data about stocks. They have several different data such as financial fundamental data of the stock at the present moment. I created this webscraping project to get the information about brazilian stocks in this website to agregate the information in a single database and uset it later to facilitate the analysis for choosing the best stocks.
+</p>
 
 
 <!-- GETTING STARTED -->
