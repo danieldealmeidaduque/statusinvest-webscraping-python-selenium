@@ -31,13 +31,13 @@
 
   <p align="center">
     <br />
-    <a href="https://github.com/danieldealmeidaduque/webscraping-statusinvest-selenium"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/danieldealmeidaduque/webscraping-statusInvest-selenium"><strong>Explore the docs »</strong></a>
     <br />
     03/20 - on going
     <br />
-    <a href="https://github.com/danieldealmeidaduque/webscraping-statusinvest-selenium">Report Bug</a>
+    <a href="https://github.com/danieldealmeidaduque/webscraping-statusInvest-selenium">Report Bug</a>
     ·
-    <a href="https://github.com/danieldealmeidaduque/webscraping-statusinvest-selenium">Request Feature</a>
+    <a href="https://github.com/danieldealmeidaduque/webscraping-statusInvest-selenium">Request Feature</a>
   </p>
 </div>
 
